@@ -24,8 +24,8 @@ Este proyecto es una aplicación web que permite gestionar obras artísticas uti
 
 1. Clona el repositorio:
    ```bash
-   git clone https://github.com/Shayd-R/creationAR.git
-   cd creationAR
+   git clone https://github.com/Shayd-R/ar-application.git
+   cd ar-application
    ```
 
 2. Instala las dependencias:
@@ -40,18 +40,24 @@ Este proyecto es una aplicación web que permite gestionar obras artísticas uti
    ```
    - Edita el archivo `.env` con tus configuraciones:
    ```env
-   NODE_ENV=development
    PORT=3000
-   BASE_URL=http://localhost:3000
+   SESSION_SECRET=ar-arte-secreto-seguro
    
+   # Para desarrollo local:
    DB_HOST=localhost
-   DB_USER=root
-   DB_PASSWORD=
-   DB_NAME=ar
    
-   SESSION_SECRET=tu-secreto-seguro
-   JWT_SECRET=tu-jwt-secreto
+   # Para Docker:
+   # DB_HOST=shared_mysql_db
+   
+   DB_USER=root
+   DB_PASS=
+   DB_NAME=ar
+   JWT_SECRET=jwt-secreto-ar-arte-12345
    ```
+
+   ⚠️ **Nota**: 
+   - Para desarrollo local, usa `DB_HOST=localhost`
+   - Para Docker, usa `DB_HOST=shared_mysql_db`
 
 4. Importa la base de datos:
    ```bash
@@ -75,12 +81,26 @@ Este proyecto es una aplicación web que permite gestionar obras artísticas uti
 
 1. Asegúrate de tener Docker y Docker Compose instalados
 
-2. Construye y levanta los contenedores:
+2. Copia el archivo de variables de entorno:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Configura las variables en el archivo `.env` (especialmente las relacionadas con la base de datos)
+
+4. Construye y levanta los contenedores:
    ```bash
    docker-compose up -d --build
    ```
 
+5. Importa la base de datos (desde otro terminal):
+   ```bash
+   docker exec -i ar-app mysql -u root ar < database/ar.sql
+   ```
+
 La aplicación estará disponible en `http://localhost:3000`
+
+⚠️ **Nota**: Si es la primera vez que ejecutas el proyecto, asegúrate de que los directorios de uploads se creen correctamente dentro del contenedor.
 
 ## 📱 Pruebas de AR en Desarrollo Local
 
@@ -110,16 +130,26 @@ Para probar las funcionalidades de AR en un entorno de desarrollo local:
 ## 📁 Estructura del Proyecto
 
 ```
-creationAR/
-├── config/           # Configuraciones
-├── controllers/      # Controladores
-├── database/         # Scripts SQL
-├── middleware/       # Middleware
-├── public/          # Archivos estáticos
-├── routes/          # Rutas
-├── uploads/         # Archivos subidos
-├── utils/           # Utilidades
+ar-application/
+├── config/           # Configuraciones y variables de entorno
+├── controllers/      # Controladores de la aplicación
+├── database/         # Scripts SQL y configuración de BD
+├── middleware/       # Middleware de autenticación y uploads
+├── public/          # Archivos estáticos (JS, CSS, imágenes)
+│   ├── css/         # Estilos
+│   └── js/          # Scripts del cliente
+├── routes/          # Rutas de la aplicación
+├── uploads/         # Archivos subidos por los usuarios
+│   ├── images/      # Imágenes principales
+│   ├── videos/      # Videos
+│   ├── targets/     # Archivos target de AR
+│   └── additional_images/  # Imágenes adicionales
+├── utils/           # Utilidades y helpers
 └── views/           # Vistas EJS
+    ├── admin/       # Vistas del panel de administración
+    ├── auth/        # Vistas de autenticación
+    ├── works/       # Vistas de obras
+    └── partials/    # Componentes reutilizables
 ```
 
 ## 🛠️ Tecnologías Utilizadas
