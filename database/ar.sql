@@ -41,7 +41,7 @@ CREATE TABLE `additional_images` (
 -- Volcado de datos para la tabla `additional_images`
 --
 
--------------------------------------------------------
+-- --------------------------------------------------------
 
 --
 -- Estructura de tabla para la tabla `categories`
@@ -195,7 +195,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id_user`, `id_role_user`, `name_user`, `email_user`, `password_user`, `token_user`, `token_exp_user`, `active_user`, `created_at_user`, `updated_at_user`) VALUES
-(1, 1, 'admin', 'admin@gmail.com', '$2a$10$EJlg1VAFo33cBe/nkAwe5OLGW5ZmsGXc.AruwepymjuQmDUAYYreS', NULL, NULL, 1, '2025-04-18 23:39:09', '2025-05-02 12:30:43'),
+(1, 1, 'admin', 'admin@gmail.com', '$2a$10$EJlg1VAFo33cBe/nkAwe5OLGW5ZmsGXc.AruwepymjuQmDUAYYreS', NULL, NULL, 1, '2025-04-18 23:39:09', '2025-05-02 12:30:43');
 
 
 -- --------------------------------------------------------
