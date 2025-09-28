@@ -1,0 +1,178 @@
+/* Estilos generales */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+  color: #343a40;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  flex: 1;
+}
+
+/* Estilos de navegación */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+  font-weight: 600;
+  font-size: 1.4rem;
+}
+
+/* Estilos para cards de obras */
+.card {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.card-status-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  color: white;
+  border-radius: 0 0 0 8px;
+  text-transform: capitalize;
+  z-index: 1;
+}
+
+.status-indicators {
+  position: absolute;
+  bottom: 5px;
+  right: 10px;
+}
+
+.status-icon {
+  margin-left: 5px;
+  font-size: 1.2rem;
+}
+
+.status-icon.processing i {
+  color: #ffc107;
+}
+
+.status-icon.info i {
+  color: #17a2b8;
+}
+
+.status-icon.active i {
+  color: #28a745;
+}
+
+.status-icon.inactive i {
+  color: #dc3545;
+}
+
+/* Estilos para la página de inicio */
+.jumbotron {
+  background-color: #f8f9fa;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.step {
+  width: 220px;
+  margin: 0 15px 20px;
+  text-align: center;
+}
+
+.step-number {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0 auto 15px;
+}
+
+.step-content h4 {
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* Estilos para formularios */
+.form-label {
+  font-weight: 500;
+}
+
+.custom-file-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Estilos para vistas de detalles */
+.work-detail-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.work-detail-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.social-links a {
+  display: inline-block;
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+/* Estado de las obras */
+.state-inactive {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.state-active {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.state-pending {
+  color: #ffc107;
+  font-weight: bold;
+}
+
+/* Estilos para el footer */
+footer {
+  margin-top: auto;
+}
+
+/* Media Queries */
+@media (max-width: 767px) {
+  .step {
+    width: 100%;
+    margin-bottom: 30px;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+} 

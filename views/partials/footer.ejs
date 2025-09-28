@@ -1,0 +1,41 @@
+<footer class="bg-dark text-white py-4 mt-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <h5>AR Arte</h5>
+        <p>Plataforma de realidad aumentada para artistas y sus obras.</p>
+      </div>
+      <div class="col-md-4 mb-3">
+        <h5>Enlaces rápidos</h5>
+        <ul class="list-unstyled">
+          <li><a href="/" class="text-white">Inicio</a></li>
+          <li><a href="/works" class="text-white">Obras</a></li>
+          <% if (!user) { %>
+            <li><a href="/auth/login" class="text-white">Iniciar Sesión</a></li>
+            <li><a href="/auth/register" class="text-white">Registrarse</a></li>
+          <% } %>
+        </ul>
+      </div>
+      <div class="col-md-4 mb-3">
+        <h5>Contacto</h5>
+        <ul class="list-unstyled">
+          <li><i class="fas fa-envelope me-2"></i>info@ar-arte.com</li>
+          <li><i class="fas fa-phone me-2"></i>+123 456 7890</li>
+          <li>
+            <div class="mt-3">
+              <a href="#" class="text-white me-2"><i class="fab fa-facebook fa-lg"></i></a>
+              <a href="#" class="text-white me-2"><i class="fab fa-twitter fa-lg"></i></a>
+              <a href="#" class="text-white me-2"><i class="fab fa-instagram fa-lg"></i></a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <hr>
+    <div class="row">
+      <div class="col-12 text-center">
+        <p class="mb-0">&copy; <%= new Date().getFullYear() %> AR Arte. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </div>
+</footer> 

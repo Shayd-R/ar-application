@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+  
+  <div class="container mt-4">
+    <%- include('../partials/messages') %>
+    
+    <div class="row">
+      <div class="col-md-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <h1><i class="fas fa-user-edit me-2"></i>Editar Usuario</h1>
+          <a href="/admin/users" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver a Usuarios
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Información del Usuario</h5>
+          </div>
+          <div class="card-body">
+            <form action="/admin/users/<%= userData.id_user %>/update" method="POST">
+              <div class="mb-3">
+                <label for="name" class="form-label">Nombre</label>
+                <input type="text" id="name" name="name" class="form-control" value="<%= userData.name_user %>" required>
+              </div>
+              <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" id="email" name="email" class="form-control" value="<%= userData.email_user %>" required>
+              </div>
+              <div class="mb-3">
+                <label for="password" class="form-label">Nueva Contraseña (dejar en blanco para mantener la actual)</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Mínimo 6 caracteres">
+                <div class="form-text">Solo completa este campo si deseas cambiar la contraseña del usuario</div>
+              </div>
+              <div class="mb-3">
+                <label for="role" class="form-label">Rol</label>
+                <select id="role" name="role" class="form-select" required>
+                  <option value="2" <%= userData.id_role_user === 2 ? 'selected' : '' %>>Usuario</option>
+                  <option value="1" <%= userData.id_role_user === 1 ? 'selected' : '' %>>Administrador</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Estado de la cuenta</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="active" id="activeAccount" value="1" <%= userData.active_user === 1 || userData.active_user === undefined ? 'checked' : '' %>>
+                  <label class="form-check-label" for="activeAccount">
+                    <span class="badge bg-success">Activa</span> - Usuario puede iniciar sesión
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="active" id="inactiveAccount" value="0" <%= userData.active_user === 0 ? 'checked' : '' %>>
+                  <label class="form-check-label" for="inactiveAccount">
+                    <span class="badge bg-danger">Inactiva</span> - Usuario no puede iniciar sesión
+                  </label>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Estado de recuperación de contraseña</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="resetToken" id="statusActive" value="clear" <%= !userData.token_user ? 'checked' : '' %>>
+                  <label class="form-check-label" for="statusActive">
+                    <span class="badge bg-success">Normal</span> - El usuario accede con su contraseña habitual
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="resetToken" id="statusReset" value="reset" <%= userData.token_user ? 'checked' : '' %>>
+                  <label class="form-check-label" for="statusReset">
+                    <span class="badge bg-warning text-dark">Recuperación pendiente</span> - El usuario deberá cambiar su contraseña en el próximo inicio de sesión
+                  </label>
+                </div>
+                <div class="form-text text-muted mt-2">
+                  <i class="fas fa-info-circle me-1"></i> Al establecer el estado en "Recuperación pendiente", se generará un token único para el usuario que invalidará su contraseña actual y le exigirá crear una nueva.
+                </div>
+              </div>
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save me-2"></i>Guardar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
+          <div class="card-footer">
+            <div class="text-muted small">
+              <p class="mb-1">
+                <strong>ID:</strong> <%= userData.id_user %><br>
+                <strong>Fecha de creación:</strong> <%= new Date(userData.created_at_user).toLocaleString('es-ES') %><br>
+                <strong>Última actualización:</strong> <%= new Date(userData.updated_at_user).toLocaleString('es-ES') %>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <%- include('../partials/footer') %>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html> 

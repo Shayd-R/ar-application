@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+  
+  <div class="container mt-4">
+    <%- include('../partials/messages') %>
+    
+    <div class="row">
+      <div class="col-md-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <h1><i class="fas fa-user-times me-2"></i>Eliminar Usuario</h1>
+          <a href="/admin/users" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver a Usuarios
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card mb-4">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Confirmar Eliminación</h5>
+          </div>
+          <div class="card-body">
+            <p class="lead">Estás a punto de eliminar al usuario <strong><%= userData.name_user %></strong>.</p>
+            
+            <div class="alert alert-info">
+              <strong>ID de Usuario:</strong> <%= userData.id_user %><br>
+              <strong>Email:</strong> <%= userData.email_user %><br>
+              <strong>Fecha de registro:</strong> <%= new Date(userData.created_at_user).toLocaleDateString('es-ES') %>
+            </div>
+            
+            <% if (hasWorks) { %>
+              <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Atención:</strong> Este usuario tiene <%= userWorks.length %> obra(s) asociada(s).
+              </div>
+              
+              <form action="/admin/users/<%= userData.id_user %>/delete" method="POST">
+                <div class="mb-4">
+                  <label class="form-label fw-bold">¿Qué deseas hacer con las obras de este usuario?</label>
+                  
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="option" id="optionMigrate" value="migrate" checked>
+                    <label class="form-check-label" for="optionMigrate">
+                      <i class="fas fa-exchange-alt me-2"></i>Migrar las obras al usuario administrador
+                    </label>
+                  </div>
+                  
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="option" id="optionDelete" value="delete">
+                    <label class="form-check-label" for="optionDelete">
+                      <i class="fas fa-trash me-2"></i>Eliminar todas las obras
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="accordion" id="worksAccordion">
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="headingWorks">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWorks" aria-expanded="false" aria-controls="collapseWorks">
+                          Ver listado de obras de este usuario
+                        </button>
+                      </h2>
+                      <div id="collapseWorks" class="accordion-collapse collapse" aria-labelledby="headingWorks" data-bs-parent="#worksAccordion">
+                        <div class="accordion-body">
+                          <div class="table-responsive">
+                            <table class="table table-striped">
+                              <thead>
+                                <tr>
+                                  <th>ID</th>
+                                  <th>Título</th>
+                                  <th>Estado</th>
+                                  <th>Fecha</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <% userWorks.forEach(work => { %>
+                                  <tr>
+                                    <td><%= work.id_work %></td>
+                                    <td><%= work.title_work %></td>
+                                    <td>
+                                      <% if (work.status_work === 'activa') { %>
+                                        <span class="badge bg-success">Activa</span>
+                                      <% } else if (work.status_work === 'inactiva') { %>
+                                        <span class="badge bg-warning text-dark">Inactiva</span>
+                                      <% } else { %>
+                                        <span class="badge bg-secondary">Pendiente</span>
+                                      <% } %>
+                                    </td>
+                                    <td><%= new Date(work.created_at_work).toLocaleDateString('es-ES') %></td>
+                                  </tr>
+                                <% }) %>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                  <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-user-times me-2"></i>Confirmar Eliminación
+                  </button>
+                </div>
+              </form>
+            <% } else { %>
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Información:</strong> Este usuario no tiene obras asociadas.
+              </div>
+              
+              <form action="/admin/users/<%= userData.id_user %>/delete" method="POST">
+                <div class="d-grid gap-2">
+                  <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-user-times me-2"></i>Confirmar Eliminación
+                  </button>
+                </div>
+              </form>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <%- include('../partials/footer') %>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html> 

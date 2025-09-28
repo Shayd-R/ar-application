@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title><%= title %></title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+    #control-panel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 10;
+    }
+    #control-panel button {
+      margin: 5px;
+      padding: 8px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #control-panel button:hover {
+      background-color: #45a049;
+    }
+    
+    /* Estilos para los botones laterales */
+    .side-buttons {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .side-buttons.left {
+      left: 20px;
+    }
+
+    .side-buttons.right {
+      right: 20px;
+    }
+
+    .side-button {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: none;
+      background-color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .side-button:hover {
+      transform: scale(1.1);
+      background-color: white;
+    }
+
+    .side-button.active {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .side-button i {
+      font-size: 20px;
+    }
+
+    /* Estilos para los contenedores de contenido */
+    .content-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      z-index: 900;
+    }
+
+    .content-container.active {
+      display: block;
+    }
+
+    /* Cursor personalizado: mostrarlo normal */
+    a-scene {
+      cursor: auto !important;
+    }
+    
+    /* Solo mostrar cursor en elementos interactivos */
+    .clickable {
+      cursor: pointer !important;
+    }
+    
+    /* Para ocultar físicamente usando display:none en lugar de visible */
+    .hidden-container {
+      display: none !important;
+    }
+    
+    /* Para mostrar físicamente */
+    .visible-container {
+      display: block !important;
+    }
+
+    /* Resto de estilos existentes */
+    #youtube-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #youtube-iframe {
+      width: 80%;
+      height: 80%;
+      max-width: 800px;
+      max-height: 450px;
+    }
+
+    #close-youtube {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: red;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .mindar-ui-overlay {
+      display: none !important;
+    }
+    #start-button {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+
+    #loading-screen, #error-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 9999;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      text-align: center;
+    }
+
+    .a-enter-vr {
+      display: none !important;
+    }
+  </style>
+  <!-- Agregar Font Awesome para los iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <!-- Scripts para la funcionalidad AR -->
+  <script src="/js/ar-components.js"></script>
+  <script src="/js/ar-menu-manager.js"></script>
+  <script src="/js/ar-init.js"></script>
+</head>
+<body>
+  <div id="loading-screen">
+    <div class="spinner-border text-light" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <h3 class="mt-3">Iniciando experiencia AR...</h3>
+  </div>
+
+  <div id="error-screen">
+    <div class="container">
+      <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+      <h3>Error al iniciar AR</h3>
+      <p id="error-message" class="mb-4">Ha ocurrido un error al iniciar la experiencia AR.</p>
+      <button onclick="location.reload()" class="btn btn-light">
+        <i class="fas fa-redo"></i> Intentar de nuevo
+      </button>
+    </div>
+  </div>
+
+  <button id="start-button">
+    <i class="fas fa-play-circle"></i> Iniciar AR
+  </button>
+
+  <div id="ar-instructions" style="position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 10px 15px; border-radius: 5px; z-index: 10; font-size: 14px; max-width: 90%; text-align: center; display: none;">
+    <p style="margin: 0;"><i class="fas fa-info-circle"></i> Mantén la cámara a una distancia de 20-50cm de la imagen para mejor experiencia</p>
+  </div>
+
+  <div id="control-panel" style="display: none;">
+    <button id="pause-button">
+      <i class="fas fa-pause"></i> Pausar
+    </button>
+    <button id="resume-button" style="display: none;">
+      <i class="fas fa-play"></i> Reanudar
+    </button>
+  </div>
+
+  <a-scene 
+    mindar-image="imageTargetSrc: <%= work.url_target_work %>; 
+                  filterMinCF: 0.0001; 
+                  filterBeta: 0.0005;
+                  warmupTolerance: 10;
+                  missTolerance: 10;
+                  showStats: false;
+                  maxTrack: 2;"
+    color-space="sRGB" 
+    renderer="colorManagement: true; antialias: true;" 
+    vr-mode-ui="enabled: false" 
+    device-orientation-permission-ui="enabled: false"
+    loading-screen="enabled: false"
+    inspector="url: https://cdn.jsdelivr.net/gh/aframevr/aframe-inspector@master/dist/aframe-inspector.min.js"
+    embedded>
+
+    <a-assets timeout="30000">
+      <!-- Contenido principal (imagen o video) -->
+      <% if (work.content_type === 'video') { %>
+        <video id="main-content" src="<%= work.url_image_work %>" preload="auto" loop playsinline crossorigin="anonymous"></video>
+      <% } else { %>
+        <img id="main-content" src="<%= work.url_image_work %>" crossorigin="anonymous"/>
+      <% } %>
+      
+      <!-- Imágenes adicionales -->
+      <% if (additionalImages && additionalImages.length > 0) { %>
+        <% additionalImages.forEach((img, index) => { %>
+          <img id="additional-image-<%= index %>" src="<%= img.image_url %>" crossorigin="anonymous"/>
+        <% }) %>
+      <% } %>
+      
+      <!-- Videos -->
+      <% if (videos && videos.length > 0) { %>
+        <% videos.forEach((video, index) => { %>
+          <% if (video.video_type === 'file') { %>
+          <video id="video-<%= index + 1 %>" src="<%= video.video_url %>" preload="auto" loop playsinline crossorigin="anonymous"></video>
+          <% } %>
+        <% }) %>
+      <% } %>
+    </a-assets>
+
+    <a-camera position="0 0 0" 
+              look-controls="enabled: false" 
+              cursor="fuse: false; rayOrigin: mouse;" 
+              raycaster="far: 20000; objects: .clickable; interval: 100; lineOpacity: 0.5">
+      <a-cursor color="#FFFFFF" fuse="false" opacity="0.8" scale="0.3 0.3 0.3"></a-cursor>
+    </a-camera>
+
+    <a-entity mindar-image-target="targetIndex: 0">
+      <!-- Panel de inicio (contenido principal) -->
+      <a-entity id="inicio-panel" visible="true">
+        <% if (work.content_type === 'video') { %>
+          <a-video src="#main-content" width="1.1" height="1" position="0 0 0" class="autoplay-video" play-on-click>
+            <!-- No añadimos overlay de play para permitir reproducción automática -->
+          </a-video>
+        <% } else { %>
+          <a-plane src="#main-content" width="1.1" height="1" position="0 0 0" material="transparent: true;"></a-plane>
+        <% } %>
+      </a-entity>
+
+      <!-- Botones AR -->
+      <a-entity id="ar-buttons">
+        <!-- Botones del lado izquierdo -->
+        <a-entity id="left-buttons" position="-0.8 0 0">
+          <!-- Sombra para mejorar visibilidad -->
+          <a-plane color="#000000" width="0.23" height="0.23" position="0 0.3 -0.01" opacity="0.5" radius="0.05"></a-plane>
+          <a-plane id="btn-inicio" class="clickable" color="#4CAF50" width="0.2" height="0.2" position="0 0.3 0" 
+                   button-feedback
+                   animation__scale="property: scale; to: 1.2 1.2 1.2; dur: 200; startEvents: mouseenter"
+                   animation__scale_reverse="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave"
+                   animation__color="property: material.color; to: #45a049; dur: 200; startEvents: mouseenter"
+                   animation__color_reverse="property: material.color; to: #4CAF50; dur: 200; startEvents: mouseleave">
+            <a-text value="INICIO" align="center" position="0 0 0.01" scale="0.15 0.15 0.15" color="white"
+                    animation__opacity="property: opacity; to: 0.8; dur: 200; startEvents: mouseenter"
+                    animation__opacity_reverse="property: opacity; to: 1; dur: 200; startEvents: mouseleave"></a-text>
+          </a-plane>
+          
+          <!-- Sombra para mejorar visibilidad -->
+          <a-plane color="#000000" width="0.23" height="0.23" position="0 0 -0.01" opacity="0.5" radius="0.05"></a-plane>
+          <a-plane id="btn-info" class="clickable" color="#2196F3" width="0.2" height="0.2" position="0 0 0"
+                   button-feedback
+                   animation__scale="property: scale; to: 1.2 1.2 1.2; dur: 200; startEvents: mouseenter"
+                   animation__scale_reverse="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave"
+                   animation__color="property: material.color; to: #1976D2; dur: 200; startEvents: mouseenter"
+                   animation__color_reverse="property: material.color; to: #2196F3; dur: 200; startEvents: mouseleave">
+            <a-text value="INFO" align="center" position="0 0 0.01" scale="0.15 0.15 0.15" color="white"
+                    animation__opacity="property: opacity; to: 0.8; dur: 200; startEvents: mouseenter"
+                    animation__opacity_reverse="property: opacity; to: 1; dur: 200; startEvents: mouseleave"></a-text>
+          </a-plane>
+
+          <!-- Sombra para mejorar visibilidad -->
+          <a-plane color="#000000" width="0.23" height="0.23" position="0 -0.3 -0.01" opacity="0.5" radius="0.05"></a-plane>
+          <!-- Botón de redes sociales -->
+          <a-plane id="btn-social" class="clickable" color="#E91E63" width="0.2" height="0.2" position="0 -0.3 0"
+                   button-feedback
+                   animation__scale="property: scale; to: 1.2 1.2 1.2; dur: 200; startEvents: mouseenter"
+                   animation__scale_reverse="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave">
+            <a-text value="SOCIAL" align="center" position="0 0 0.01" scale="0.15 0.15 0.15" color="white"></a-text>
+          </a-plane>
+        </a-entity>
+
+        <!-- Botones del lado derecho -->
+        <a-entity id="right-buttons" position="0.8 0 0">
+          <!-- Sombra para mejorar visibilidad -->
+          <a-plane color="#000000" width="0.23" height="0.23" position="0 0.3 -0.01" opacity="0.5" radius="0.05"></a-plane>
+          <a-plane id="btn-videos" class="clickable" color="#FF5722" width="0.2" height="0.2" position="0 0.3 0"
+                   button-feedback
+                   animation__scale="property: scale; to: 1.2 1.2 1.2; dur: 200; startEvents: mouseenter"
+                   animation__scale_reverse="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave"
+                   animation__color="property: material.color; to: #E64A19; dur: 200; startEvents: mouseenter"
+                   animation__color_reverse="property: material.color; to: #FF5722; dur: 200; startEvents: mouseleave">
+            <a-text value="VIDEOS" align="center" position="0 0 0.01" scale="0.15 0.15 0.15" color="white"
+                    animation__opacity="property: opacity; to: 0.8; dur: 200; startEvents: mouseenter"
+                    animation__opacity_reverse="property: opacity; to: 1; dur: 200; startEvents: mouseleave"></a-text>
+          </a-plane>
+          
+          <!-- Sombra para mejorar visibilidad -->
+          <a-plane color="#000000" width="0.23" height="0.23" position="0 0 -0.01" opacity="0.5" radius="0.05"></a-plane>
+          <a-plane id="btn-imagenes" class="clickable" color="#9C27B0" width="0.2" height="0.2" position="0 0 0"
+                   button-feedback
+                   animation__scale="property: scale; to: 1.2 1.2 1.2; dur: 200; startEvents: mouseenter"
+                   animation__scale_reverse="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave"
+                   animation__color="property: material.color; to: #7B1FA2; dur: 200; startEvents: mouseenter"
+                   animation__color_reverse="property: material.color; to: #9C27B0; dur: 200; startEvents: mouseleave">
+            <a-text value="IMGS" align="center" position="0 0 0.01" scale="0.15 0.15 0.15" color="white"
+                    animation__opacity="property: opacity; to: 0.8; dur: 200; startEvents: mouseenter"
+                    animation__opacity_reverse="property: opacity; to: 1; dur: 200; startEvents: mouseleave"></a-text>
+          </a-plane>
+        </a-entity>
+      </a-entity>
+      
+      <!-- Paneles de contenido -->
+      <a-entity id="content-panels" position="0 0 0.02">
+        <!-- Panel de información -->
+        <a-entity id="info-panel" visible="false">
+          <a-plane color="#222222" width="1.1" height="1" position="0 0 0" opacity="0.9">
+            <a-text value="<%= work.title_work %>" 
+                    position="0 0.4 0.01" 
+                    align="center" 
+                    color="#FFFFFF" 
+                    scale="0.15 0.15 0.15"></a-text>
+            
+            <a-text value="Categoría: <%= work.name_category || 'Sin categoría' %>"
+                    position="0 0.25 0.01"
+                    align="center" 
+                    color="#FFFFFF" 
+                    scale="0.1 0.1 0.1"></a-text>
+            
+            <a-text value="<%= work.description_work %>"
+                    position="0 0 0.01" 
+                    align="center" 
+                    color="#FFFFFF" 
+                    scale="0.07 0.07 0.07"
+                    width="10"
+                    wrap-count="45"></a-text>
+            
+            <a-text value="Tags: <%= Array.isArray(tags) && tags.length > 0 ? tags.map(t => t.name_tag).join(', ') : 'Sin tags' %>"
+                    position="0 -0.3 0.01"
+                    align="center" 
+                    color="#FFFFFF" 
+                    scale="0.07 0.07 0.07"
+                    width="10"
+                    wrap-count="45"></a-text>
+          </a-plane>
+        </a-entity>
+
+        <!-- Panel de videos -->
+        <a-entity id="videos-panel" visible="false">
+          <a-plane color="#222222" width="1.1" height="1" position="0 0 0" opacity="0.9">
+            <!-- Botones de tipo de video -->
+            <a-entity id="video-type-buttons" position="0 0.35 0.02">
+              <a-plane id="btn-youtube" class="clickable" color="#FF0000" width="0.2" height="0.1" position="-0.15 0 0"
+                       button-feedback
+                       animation__scale="property: scale; to: 1.2 1.2 1.2; dur: 200; startEvents: mouseenter"
+                       animation__scale_reverse="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave"
+                       animation__color="property: material.color; to: #c71d1d; dur: 200; startEvents: click"
+                       animation__color_reverse="property: material.color; to: #FF0000; dur: 1000; startEvents: mouseleave">
+                <a-text value="YOUTUBE" align="center" position="0 0 0.01" scale="0.08 0.08 0.08" color="white"></a-text>
+                <!-- Icono de YouTube -->
+                <a-entity geometry="primitive: plane; width: 0.03; height: 0.03" 
+                          material="color: white" 
+                          position="-0.07 0 0.005"></a-entity>
+              </a-plane>
+              
+              <a-plane id="btn-normal" class="clickable" color="#4CAF50" width="0.2" height="0.1" position="0.15 0 0"
+                       button-feedback
+                       animation__scale="property: scale; to: 1.2 1.2 1.2; dur: 200; startEvents: mouseenter"
+                       animation__scale_reverse="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave"
+                       animation__color="property: material.color; to: #2E7D32; dur: 200; startEvents: click"
+                       animation__color_reverse="property: material.color; to: #4CAF50; dur: 1000; startEvents: mouseleave">
+                <a-text value="VIDEOS" align="center" position="0 0 0.01" scale="0.08 0.08 0.08" color="white"></a-text>
+                <!-- Icono de video -->
+                <a-entity geometry="primitive: plane; width: 0.04; height: 0.03" 
+                          material="color: white" 
+                          position="-0.07 0 0.005"></a-entity>
+              </a-plane>
+              
+              <!-- Instrucciones -->
+              <a-entity position="0 -0.07 0">
+                <a-text value="Selecciona un tipo de video:" 
+                        align="center" 
+                        color="white" 
+                        scale="0.05 0.05 0.05"></a-text>
+              </a-entity>
+            </a-entity>
+
+            <!-- Contenedor de videos de YouTube -->
+            <a-entity id="youtube-videos-container" position="0 0 0.02" visible="false" >
+              <% 
+              const youtubeVideos = Array.isArray(videos) ? videos.filter(v => v.video_type === 'link') : [];
+              if (youtubeVideos.length > 0) { 
+                youtubeVideos.forEach((video, index) => { 
+                  // Calcular posición en la cuadrícula
+                  const row = Math.floor(index / 3);
+                  const col = index % 3;
+                  const xPos = -0.3 + (col * 0.3);
+                  const yPos = 0.0 - (row * 0.2);
+
+                  let videoId = '';
+                  if (video.video_url && video.video_url.includes('youtu.be/')) {
+                    videoId = video.video_url.split('youtu.be/')[1];
+                  } else if (video.video_url && video.video_url.includes('youtube.com/watch?v=')) {
+                    videoId = video.video_url.split('v=')[1].split('&')[0];
+                  }
+                  if (videoId) {
+              %>
+                <a-entity class="youtube-wrapper" position="<%= xPos %> <%= yPos %> 0">
+                  <a-plane class="youtube-thumbnail clickable" 
+                           width="0.25" height="0.15"
+                           material="shader: flat; src: https://img.youtube.com/vi/<%= videoId %>/mqdefault.jpg"
+                           position="0 0 0"
+                           data-video-id="<%= videoId %>"
+                           animation__scale="property: scale; to: 1.1 1.1 1.1; dur: 200; startEvents: mouseenter"
+                           animation__scale_reverse="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave" >
+                    <!-- Overlay de play -->
+                    <a-entity class="play-button clickable" 
+                              geometry="primitive: plane; width: 0.25; height: 0.15"
+                              material="opacity: 0; transparent: true; depthTest: false"
+                              position="0 0 0.001">
+                      <a-circle color="red" radius="0.03" position="0 0 0.001" opacity="0.9"></a-circle>
+                      <a-triangle color="white" 
+                                 scale="0.04 0.04 0.04" 
+                                 rotation="0 0 -90" 
+                                 position="0.01 0 0.002"></a-triangle>
+                    </a-entity>
+                  </a-plane>
+                </a-entity>
+              <% 
+                  }
+                }); 
+              } else { %>
+                <a-text value="No hay videos de YouTube" 
+                        align="center" 
+                        position="0 0 0.01" 
+                        scale="0.1 0.1 0.1" 
+                        color="white"></a-text>
+              <% } %>
+            </a-entity>
+
+            <!-- Contenedor de videos normales -->
+            <a-entity id="normal-videos-container" position="0 0 0.02" visible="false">
+              <% 
+              const normalVideos = Array.isArray(videos) ? videos.filter(v => v.video_type === 'file') : [];
+              if (normalVideos.length > 0) { 
+                normalVideos.forEach((video, index) => { 
+                  // Calcular posición en la cuadrícula
+                  const row = Math.floor(index / 3);
+                  const col = index % 3;
+                  const xPos = -0.3 + (col * 0.3);
+                  const yPos = 0.0 - (row * 0.2); // Primera fila en 0, segunda en -0.2, etc.
+              %>
+                <a-entity class="video-wrapper" position="<%= xPos %> <%= yPos %> 0">
+                  <a-video class="video-player clickable" 
+                          src="#video-<%= index + 1 %>"
+                          width="0.25" height="0.15"
+                          position="0 0 0"
+                          video-controls>
+                    <!-- Play button overlay -->
+                    <a-entity class="play-button clickable" 
+                              position="0 0 0.001">
+                      <a-circle class="play-bg" color="rgba(0, 0, 0, 0.5)" radius="0.04" opacity="0.8"></a-circle>
+                      <a-entity class="play-icon" 
+                                geometry="primitive: triangle; vertexA: 0.03 0 0; vertexB: -0.01 0.025 0; vertexC: -0.01 -0.025 0" 
+                                material="color: white"
+                                position="0.005 0 0.001"
+                                rotation="0 0 90"></a-entity>
+                    </a-entity>
+                  </a-video>
+                </a-entity>
+              <% }); 
+              } else { %>
+                <a-text value="No hay videos normales" 
+                        align="center" 
+                        position="0 0 0.01" 
+                        scale="0.1 0.1 0.1" 
+                        color="white"></a-text>
+              <% } %>
+            </a-entity>
+          </a-plane>
+        </a-entity>
+
+        <!-- Panel de imágenes adicionales -->
+        <a-entity id="imagenes-panel" visible="false">
+          <% if (additionalImages && additionalImages.length > 0) { %>
+            <a-plane id="carousel-container" 
+                     width="1.1" height="1" 
+                     position="0 0 0"
+                     opacity="0.9"
+                     material="src: #additional-image-0"
+                     carousel-manager>
+              <a-entity position="-0.4 -0.25 0.01">
+                <a-plane class="prev-btn clickable" 
+                        color="#444444" 
+                        width="0.1" height="0.1" 
+                        position="0 0 0"
+                        data-action="prev"
+                        animation__scale="property: scale; to: 1.2 1.2 1.2; dur: 200; startEvents: mouseenter"
+                        animation__scale_reverse="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave">
+                  <a-text value="<" align="center" position="0 0 0.001" scale="0.1 0.1 0.1" color="white"></a-text>
+                </a-plane>
+              </a-entity>
+
+              <a-entity position="0.4 -0.25 0.01">
+                <a-plane class="next-btn clickable" 
+                        color="#444444" 
+                        width="0.1" height="0.1" 
+                        position="0 0 0"
+                        data-action="next"
+                        animation__scale="property: scale; to: 1.2 1.2 1.2; dur: 200; startEvents: mouseenter"
+                        animation__scale_reverse="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave">
+                  <a-text value=">" align="center" position="0 0 0.001" scale="0.1 0.1 0.1" color="white"></a-text>
+                </a-plane>
+              </a-entity>
+            </a-plane>
+          <% } else { %>
+            <a-plane color="#222222" width="1.1" height="1" position="0 0 0">
+              <a-text value="No hay imágenes adicionales" 
+                      align="center" 
+                      position="0 0 0.01" 
+                      scale="0.1 0.1 0.1" 
+                      color="white"></a-text>
+            </a-plane>
+          <% } %>
+        </a-entity>
+
+        <!-- Panel de redes sociales -->
+        <a-entity id="social-panel" visible="false">
+          <a-plane color="#222222" width="1.1" height="1" position="0 0 0" opacity="0.9">
+            <!-- Listado de redes sociales dinámico -->
+            <a-entity id="social-links-container" position="0 0 0.02">
+              <% if (Array.isArray(social_media) && social_media.length > 0) { %>
+                <a-text value="Redes Sociales" 
+                        align="center" 
+                        position="0 0.25 0.01" 
+                        scale="0.15 0.15 0.15" 
+                        color="white"></a-text>
+                        
+                <% social_media.forEach((social, index) => { 
+                  // Calcular posición: distribuir en una cuadrícula
+                  const itemsPerRow = 3;
+                  const row = Math.floor(index / itemsPerRow);
+                  const col = index % itemsPerRow;
+                  const xPos = -0.3 + (col * 0.3);
+                  const yPos = 0.1 - (row * 0.2);
+                  
+                  // Determinar color e icono según la plataforma
+                  let color, icon;
+                  switch(social.platform.toLowerCase()) {
+                    case 'facebook':
+                      color = '#3b5998';
+                      icon = 'FB';
+                      break;
+                    case 'instagram':
+                      color = '#E1306C';
+                      icon = 'IG';
+                      break;
+                    case 'twitter':
+                      color = '#1DA1F2';
+                      icon = 'X';
+                      break;
+                    case 'threads':
+                      color = '#000000';
+                      icon = 'TH';
+                      break;
+                    default:
+                      color = '#666666';
+                      icon = social.platform.substring(0, 2).toUpperCase();
+                  }
+                %>
+                  <a-entity position="<%= xPos %> <%= yPos %> 0">
+                    <a-plane class="social-link clickable" 
+                            color="<%= color %>" 
+                            width="0.25" height="0.15"
+                            position="0 0 0"
+                            data-url="<%= social.handle_or_url %>"
+                            animation__scale="property: scale; to: 1.1 1.1 1.1; dur: 200; startEvents: mouseenter"
+                            animation__scale_reverse="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave">
+                      <!-- Icono de la red social -->
+                      <a-text value="<%= icon %>" 
+                              align="center" 
+                              position="0 0.03 0.01" 
+                              scale="0.1 0.1 0.1" 
+                              color="white"></a-text>
+                      <!-- Handle o nombre de usuario simplificado -->
+                      <% 
+                      let displayName = social.handle_or_url;
+                      // Extraer solo el nombre de usuario de la URL o handle
+                      if (displayName.includes('/')) {
+                        const parts = displayName.split('/');
+                        displayName = parts[parts.length - 1] || parts[parts.length - 2] || displayName;
+                      }
+                      if (displayName.includes('@')) {
+                        displayName = displayName.split('@').pop();
+                      }
+                      // Limitar longitud
+                      if (displayName.length > 15) {
+                        displayName = displayName.substring(0, 12) + '...';
+                      }
+                      %>
+                      <a-text value="<%= displayName %>" 
+                              align="center" 
+                              position="0 -0.03 0.01" 
+                              scale="0.06 0.06 0.06" 
+                              color="white"
+                              wrap-count="15"></a-text>
+                    </a-plane>
+                  </a-entity>
+                <% }); %>
+              <% } else { %>
+                <a-text value="No hay redes sociales disponibles" 
+                        align="center" 
+                        position="0 0 0.01" 
+                        scale="0.1 0.1 0.1" 
+                        color="white"></a-text>
+              <% } %>
+            </a-entity>
+          </a-plane>
+        </a-entity>
+      </a-entity>
+    </a-entity>
+  </a-scene>
+
+  <!-- Agregar el modal de YouTube después del body pero antes del script -->
+  <div id="youtube-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000;">
+    <div style="position: relative; width: 80%; height: 80%; max-width: 800px; margin: 50px auto;">
+      <button id="close-youtube" style="position: absolute; top: -40px; right: 0; background: red; color: white; border: none; cursor: pointer; border-radius: 5px; padding: 8px 12px; font-size: 16px;">
+        <i class="fas fa-times"></i>
+      </button>
+      <iframe id="youtube-iframe" style="width: 100%; height: 100%; border: none;" allowfullscreen allow="autoplay; fullscreen"></iframe>
+    </div>
+  </div>
+
+  <script>
+    // Mostrar instrucciones cuando se inicia la experiencia AR
+    document.getElementById('start-button').addEventListener('click', function() {
+      setTimeout(function() {
+        const instructions = document.getElementById('ar-instructions');
+        instructions.style.display = 'block';
+        
+        // Ocultar después de 10 segundos
+        setTimeout(function() {
+          instructions.style.display = 'none';
+        }, 10000);
+      }, 3000); // Mostrar después de 3 segundos (tiempo para que cargue AR)
+    });
+  </script>
+</body>
+</html> 

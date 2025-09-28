@@ -1,0 +1,48 @@
+# docker-compose.yml
+# Ubicación: /home/shaydr/docker/mysql/docker-compose.yml
+
+version: '3.8'
+
+services:
+  shared_mysql_db:
+    image: mysql:5.7
+    container_name: shared_mysql_container
+    restart: always
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      # Asegúrate de que si usas MYSQL_ROOT_PASSWORD en lugar de ALLOW_EMPTY,
+      # la contraseña en los scripts .sh coincida.
+      # MYSQL_ROOT_PASSWORD: your_secure_password # <-- Si usas esto
+    ports:
+      - "3306:3306"
+    volumes:
+      - shared_mysql_data:/var/lib/mysql
+      # Monta los scripts .sh y .sql en el directorio de inicialización.
+      # ¡El orden en esta lista NO importa para la ejecución, solo el orden alfabético de los nombres de archivo dentro del directorio!
+      - ./ar.sql:/docker-entrypoint-initdb.d/01-ar.sql
+
+    networks:
+      - shared-backend-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: shared_phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: shared_mysql_db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: ""
+    ports:
+      - "8080:80"
+    networks:
+      - shared-backend-network
+    depends_on:
+      - shared_mysql_db
+
+networks:
+  shared-backend-network:
+    driver: bridge
+    name: shared-backend-network # Nombre explícito para que las apps lo encuentren
+
+volumes:
+  shared_mysql_data:

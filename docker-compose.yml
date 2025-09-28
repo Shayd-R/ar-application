@@ -1,0 +1,44 @@
+# docker-compose.yml (Proyecto AR)
+version: '3.8'
+
+services:
+  # Servicio de base de datos MySQL - ELIMINADO
+  # Este proyecto ahora usa el DB compartido definido en shared-services.yml
+
+  # Servicio de la aplicación Node.js AR
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ar-app
+    restart: always
+    # depends_on:
+    #   db: # Ya no dependemos de un servicio 'db' local
+    #     condition: service_healthy # La salud del DB se maneja en shared-services
+    ports:
+      # Mapeo del puerto de la aplicación al puerto 3000 del host
+      - "3000:3000"
+    environment:
+      PORT: 3000 # La app escucha internamente en 3000
+      SESSION_SECRET: ar-arte-secreto-seguro
+      # Configura la conexión para usar el contenedor MySQL compartido
+      DB_HOST: shared_mysql_db # <-- Nombre del servicio en mysql/docker-compose.yml
+      DB_USER: root # Usamos el usuario root según la configuración del DB compartido
+      DB_PASS: "" # <-- Contraseña vacía según la configuración del DB compartido
+      DB_NAME: ar # Nombre de la base de datos específica para este proyecto dentro de la instancia compartida
+      JWT_SECRET: jwt-secreto-ar-arte-12345
+    volumes:
+      - ./uploads:/app/uploads
+      - ./public:/app/public
+      - ./views:/app/views
+      # Asegúrate de que tus archivos de código fuente también estén mapeados si es necesario para desarrollo:
+      # - .:/app # Descomentar si usas nodemon o similar para recargar el código
+    networks:
+      - shared-backend-network # Conecta la app a la red compartida
+
+# Redes:
+networks:
+  # Referencia a la red compartida definida en shared-services.yml
+  shared-backend-network:
+    external: true # Indica que esta red ya existe y es externa a este compose
+    name: shared-backend-network # Nombre exacto definido en mysql/docker-compose.yml

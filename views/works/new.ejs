@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <style>
+    .dropzone {
+      border: 2px dashed #ccc;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+      position: relative;
+      background: #f8f9fa;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: #007bff;
+      background: #e9ecef;
+    }
+    .dropzone .preview-image {
+      max-width: 100%;
+      max-height: 150px;
+      display: none;
+      margin: 10px auto;
+      border-radius: 5px;
+    }
+    .dropzone .upload-icon {
+      font-size: 2rem;
+      color: #6c757d;
+      margin-bottom: 10px;
+    }
+    .dropzone .upload-text {
+      color: #6c757d;
+      margin-bottom: 5px;
+    }
+    .dropzone .upload-hint {
+      font-size: 0.875rem;
+      color: #999;
+    }
+    .dropzone input[type="file"] {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .dropzone .remove-file {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      padding: 5px 8px;
+      display: none;
+    }
+    #progressBar {
+      width: 100%;
+      margin: 10px 0;
+    }
+    #status {
+      margin: 10px 0;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+  
+  <div class="container mt-4">
+    <%- include('../partials/messages') %>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1>Crear nueva obra</h1>
+      <a href="/works" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Volver a la galería
+      </a>
+    </div>
+    
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i> Información importante</h5>
+      </div>
+      <div class="card-body">
+        <p>Para crear una nueva experiencia AR, sigue estos pasos:</p>
+        <ol>
+          <li>Sube una imagen en el compilador y genera el archivo target.</li>
+          <li>Usa la misma imagen como imagen principal y sube el archivo target generado.</li>
+          <li>Completa la información de la obra.</li>
+          <li>Guarda la obra para activar la experiencia AR.</li>
+        </ol>
+      </div>
+    </div>
+    
+    <!-- Compilador de imagen -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">Compilador de imagen AR</h5>
+      </div>
+      <div class="card-body">
+        <div id="compilerDropzone" class="dropzone">
+          <i class="fas fa-cloud-upload-alt upload-icon"></i>
+          <div class="upload-text">Arrastra una imagen aquí o haz clic para seleccionar</div>
+          <div class="upload-hint">Formato: JPG, PNG - Tamaño máximo: 50MB</div>
+          <input type="file" id="compilerImage" accept="image/*">
+          <img id="compilerPreview" class="preview-image" alt="Vista previa">
+          <button type="button" class="btn btn-sm btn-danger remove-file" id="removeCompilerFile">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <button id="compileButton" class="btn btn-primary" disabled>
+          <i class="fas fa-cogs me-1"></i> Compilar Imagen
+        </button>
+        
+        <div class="mt-3">
+          <div class="progress" style="display: none;">
+            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <div id="status" class="alert alert-info mt-2" style="display: none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <form action="/works" method="POST" enctype="multipart/form-data" class="mb-5">
+      <!-- Información básica -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Información básica</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="title" class="form-label">Título de la obra *</label>
+                <input type="text" class="form-control" id="title" name="title" required>
+                <div class="form-text">Elige un título descriptivo para tu obra.</div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="description" class="form-label">Descripción breve *</label>
+                <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+                <div class="form-text">Describe brevemente tu obra.</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="category" class="form-label">Categoría</label>
+                <select class="form-select" id="category" name="id_category">
+                  <option value="">-- Selecciona una categoría --</option>
+                  <% if (categories && categories.length > 0) { %>
+                    <% categories.forEach(category => { %>
+                      <option value="<%= category.id_category %>"><%= category.name_category %></option>
+                    <% }) %>
+                  <% } %>
+                </select>
+              </div>
+              
+              <div class="mb-3">
+                <label for="tags" class="form-label">Etiquetas</label>
+                <select class="form-control select2-tags" id="tags" name="tags[]" multiple="multiple">
+                  <% if (tags && tags.length > 0) { %>
+                    <% tags.forEach(tag => { %>
+                      <option value="<%= tag.id_tag %>"><%= tag.name_tag %></option>
+                    <% }) %>
+                  <% } %>
+                </select>
+                <div class="form-text">Selecciona o crea nuevas etiquetas para tu obra.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Archivos de la obra -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Archivos de la obra</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <label class="form-label">Contenido principal *</label>
+              <div id="mainContentDropzone" class="dropzone">
+                <i class="fas fa-file upload-icon"></i>
+                <div class="upload-text">Arrastra una imagen o video aquí o haz clic para seleccionar</div>
+                <div class="upload-hint">Imagen o video que se mostrará en AR (Máximo 100MB)</div>
+                <input type="file" id="mainContent" name="mainContent" accept="image/*,video/*" required>
+                <img id="mainImagePreview" class="preview-image" alt="Vista previa" style="display: none;">
+                <video id="mainVideoPreview" class="preview-image" controls style="display: none;"></video>
+                <button type="button" class="btn btn-sm btn-danger remove-file" id="removeMainContent">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Archivo target *</label>
+              <div id="targetDropzone" class="dropzone">
+                <i class="fas fa-file-alt upload-icon"></i>
+                <div class="upload-text">Arrastra el archivo target aquí o haz clic para seleccionar</div>
+                <div class="upload-hint">Archivo .mind generado por el compilador</div>
+                <input type="file" id="targetFile" name="targetFile" accept=".mind" required>
+                <div id="targetFileName" class="mt-2" style="display: none;"></div>
+                <button type="button" class="btn btn-sm btn-danger remove-file" id="removeTargetFile">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between">
+        <a href="/works" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="fas fa-save me-1"></i> Guardar obra
+        </button>
+      </div>
+    </form>
+  </div>
+  
+  <%- include('../partials/footer') %>
+  
+  <!-- jQuery primero -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- Luego Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Después Select2 -->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  <!-- Script principal -->
+  <script type="module">
+    // Importar desde el módulo MindAR
+    import { Compiler } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js';
+
+    // Esperar a que jQuery esté listo
+    $(document).ready(async function() {
+      // Inicializar Select2
+      $('.select2-tags').select2({
+        placeholder: "Selecciona o crea etiquetas...",
+        tags: true,
+        tokenSeparators: [',', ' '],
+        allowClear: true,
+        language: {
+          noResults: function() {
+            return "No se encontraron resultados";
+          },
+          inputTooShort: function() {
+            return "Por favor ingresa al menos 1 caracter";
+          }
+        }
+      });
+
+      // Función para configurar dropzone
+      function setupDropzone(dropzoneId, inputId, previewImageId, previewVideoId, removeButtonId, isTarget = false) {
+        const dropzone = document.getElementById(dropzoneId);
+        const input = document.getElementById(inputId);
+        const previewImage = document.getElementById(previewImageId);
+        const previewVideo = previewVideoId ? document.getElementById(previewVideoId) : null;
+        const removeButton = document.getElementById(removeButtonId);
+        const targetFileName = isTarget ? document.getElementById('targetFileName') : null;
+
+        // Eventos de arrastrar y soltar
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+          dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+          dropzone.addEventListener(eventName, () => {
+            dropzone.classList.add('dragover');
+          });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+          dropzone.addEventListener(eventName, () => {
+            dropzone.classList.remove('dragover');
+          });
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+          const file = e.dataTransfer.files[0];
+          if (file) {
+            input.files = e.dataTransfer.files;
+            handleFile(file);
+          }
+        });
+
+        input.addEventListener('change', (e) => {
+          if (e.target.files.length) {
+            handleFile(e.target.files[0]);
+          }
+        });
+
+        removeButton.addEventListener('click', () => {
+          input.value = '';
+          if (isTarget) {
+            targetFileName.style.display = 'none';
+            targetFileName.textContent = '';
+          } else if (previewVideo) {
+            previewImage.style.display = 'none';
+            previewVideo.style.display = 'none';
+            previewImage.src = '';
+            previewVideo.src = '';
+          } else {
+            previewImage.style.display = 'none';
+            previewImage.src = '';
+          }
+          removeButton.style.display = 'none';
+          if (inputId === 'compilerImage') {
+            compileButton.disabled = true;
+          }
+        });
+
+        function handleFile(file) {
+          if (isTarget) {
+            if (file.name.toLowerCase().endsWith('.mind')) {
+              targetFileName.textContent = file.name;
+              targetFileName.style.display = 'block';
+              removeButton.style.display = 'block';
+            } else {
+              alert('Por favor, selecciona un archivo .mind válido');
+              input.value = '';
+            }
+          } else if (file.type.startsWith('video/') && previewVideo) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              previewVideo.src = e.target.result;
+              previewVideo.style.display = 'block';
+              previewImage.style.display = 'none';
+              removeButton.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+          } else if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              previewImage.src = e.target.result;
+              previewImage.style.display = 'block';
+              if (previewVideo) previewVideo.style.display = 'none';
+              removeButton.style.display = 'block';
+              if (inputId === 'compilerImage') {
+                selectedImage = new Image();
+                selectedImage.onload = () => {
+                  compileButton.disabled = false;
+                };
+                selectedImage.src = e.target.result;
+              }
+            };
+            reader.readAsDataURL(file);
+          }
+        }
+      }
+
+      // Configurar los dropzones
+      setupDropzone('compilerDropzone', 'compilerImage', 'compilerPreview', null, 'removeCompilerFile');
+      setupDropzone('mainContentDropzone', 'mainContent', 'mainImagePreview', 'mainVideoPreview', 'removeMainContent');
+      setupDropzone('targetDropzone', 'targetFile', 'targetFileName', null, 'removeTargetFile', true);
+
+      // Variables para el compilador
+      const compileButton = document.getElementById('compileButton');
+      const progressBar = document.getElementById('progressBar');
+      const progressContainer = document.querySelector('.progress');
+      const status = document.getElementById('status');
+      
+      let selectedImage = null;
+      let compiler = null;
+
+      try {
+        compiler = new Compiler();
+        console.log("Compilador inicializado correctamente");
+      } catch (error) {
+        console.error("Error al inicializar el compilador:", error);
+        status.textContent = "Error al inicializar el compilador";
+        status.style.display = 'block';
+      }
+
+      // Evento para el botón de compilación
+      compileButton.addEventListener('click', async () => {
+        if (!selectedImage || !compiler) {
+          status.textContent = "Error: No hay imagen seleccionada o el compilador no está listo";
+          return;
+        }
+        
+        compileButton.disabled = true;
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '0%';
+        status.textContent = "Compilando imagen...";
+        status.style.display = 'block';
+        
+        try {
+          const dataList = await compiler.compileImageTargets([selectedImage], (progress) => {
+            const percentage = Math.floor(progress * 100);
+            progressBar.style.width = percentage + '%';
+            progressBar.setAttribute('aria-valuenow', percentage);
+            status.textContent = `Compilando: ${percentage}%`;
+          });
+          
+          const compiledBuffer = await compiler.exportData();
+          
+          // Crear y descargar el archivo target
+          const blob = new Blob([compiledBuffer], { type: 'application/octet-stream' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'target.mind';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          status.textContent = "¡Compilación completada! El archivo target se ha descargado.";
+          compileButton.disabled = false;
+        } catch (error) {
+          status.textContent = "Error durante la compilación: " + error.message;
+          console.error("Error durante la compilación:", error);
+          compileButton.disabled = false;
+        }
+      });
+
+      // Función para manejar la vista previa del contenido principal
+      document.getElementById('mainContent').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const imagePreview = document.getElementById('mainImagePreview');
+        const videoPreview = document.getElementById('mainVideoPreview');
+        
+        if (file) {
+          const reader = new FileReader();
+          
+          if (file.type.startsWith('image/')) {
+            reader.onload = function(e) {
+              imagePreview.src = e.target.result;
+              imagePreview.style.display = 'block';
+              videoPreview.style.display = 'none';
+            }
+            reader.readAsDataURL(file);
+          } else if (file.type.startsWith('video/')) {
+            reader.onload = function(e) {
+              videoPreview.src = e.target.result;
+              videoPreview.style.display = 'block';
+              imagePreview.style.display = 'none';
+            }
+            reader.readAsDataURL(file);
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html> 

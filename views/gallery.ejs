@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- SweetAlert2 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <style>
+    .work-card {
+      transition: transform 0.3s ease;
+      margin-bottom: 20px;
+      height: 100%;
+    }
+    .work-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .work-image {
+      height: 250px;
+      object-fit: cover;
+      width: 100%;
+    }
+    .gallery-header {
+      background-color: #f8f9fa;
+      padding: 40px 0;
+      margin-bottom: 40px;
+      border-radius: 0 0 10px 10px;
+    }
+    .filters {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <%- include('./partials/navbar') %>
+  
+  <div class="gallery-header text-center">
+    <div class="container">
+      <h1 class="display-4">Galería de Arte Digital</h1>
+      <p class="lead">Explora obras artísticas con experiencias de realidad aumentada</p>
+    </div>
+  </div>
+  
+  <div class="container">
+    <%- include('./partials/messages') %>
+    
+    <!-- Filtros -->
+    <div class="filters">
+      <div class="row">
+        <div class="col-md-12 mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros</h5>
+            <div class="btn-group">
+              <button type="button" class="btn btn-sm btn-outline-primary active" data-filter="all">Todas</button>
+              <button type="button" class="btn btn-sm btn-outline-primary" data-filter="recientes">Más recientes</button>
+              <button type="button" class="btn btn-sm btn-outline-primary" data-filter="populares">Más populares</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Galería de obras -->
+    <div class="row">
+      <% if (works && works.length > 0) { %>
+        <% works.forEach(work => { %>
+          <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card work-card">
+              <% if (work.content_type === 'video') { %>
+                <!-- Si el contenido es un video, mostrar miniatura o el video -->
+                <div class="position-relative">
+                  <video 
+                    src="<%= work.url_image_work %>" 
+                    class="card-img-top work-image" 
+                    muted
+                    onmouseover="this.play()" 
+                    onmouseout="this.pause(); this.currentTime=0;">
+                  </video>
+                  <div class="position-absolute top-0 end-0 p-2">
+                    <span class="badge bg-danger"><i class="fas fa-video me-1"></i>Video</span>
+                  </div>
+                </div>
+              <% } else { %>
+                <!-- Si es imagen, mostrar la imagen -->
+                <img 
+                  src="<%= work.url_image_work %>" 
+                  class="card-img-top work-image" 
+                  alt="<%= work.title_work %>"
+                >
+              <% } %>
+              <div class="card-body">
+                <h5 class="card-title"><%= work.title_work %></h5>
+                <p class="card-text text-muted">
+                  <i class="fas fa-user me-1"></i> <%= work.name_user %>
+                </p>
+                <p class="card-text text-truncate"><%= work.description_work %></p>
+                
+                <% if (user) { %>
+                  <!-- Solo mostrar Ver obra para usuarios logueados -->
+                  <div class="d-grid gap-2 mt-3 mb-2">
+                    <a href="/v/<%= work.share_token %>" class="btn btn-primary">
+                      <i class="fas fa-eye me-1"></i>Ver detalles
+                    </a>
+                  </div>
+                <% } %>
+                
+                <div class="d-flex gap-2 mt-2">
+                  <!-- Botón de AR siempre visible -->
+                  <a href="/v/<%= work.share_token %>/ar" class="btn btn-danger flex-grow-1">
+                    <i class="fas fa-vr-cardboard me-1"></i>Ver en AR
+                  </a>
+                  
+                  <!-- Botón de compartir siempre visible -->
+                  <button class="btn btn-outline-primary share-btn"
+                          data-token="<%= work.share_token %>" 
+                          data-title="<%= work.title_work %>">
+                    <i class="fas fa-share-alt"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <div class="col-12 text-center my-5">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>No hay obras disponibles en este momento
+          </div>
+        </div>
+      <% } %>
+    </div>
+    
+    <!-- Sección de llamada a la acción -->
+    <div class="row mt-5 mb-5">
+      <div class="col-12">
+        <div class="p-5 text-center bg-light rounded">
+          <h2>¿Eres artista?</h2>
+          <p class="lead">Sube tus obras y compártelas con el mundo a través de experiencias de realidad aumentada</p>
+          <% if (!user) { %>
+            <div class="mt-4">
+              <a href="/auth/login" class="btn btn-primary me-2">
+                <i class="fas fa-sign-in-alt me-1"></i>Iniciar Sesión
+              </a>
+              <a href="/auth/register" class="btn btn-outline-primary">
+                <i class="fas fa-user-plus me-1"></i>Registrarse
+              </a>
+            </div>
+          <% } else { %>
+            <a href="/works/new" class="btn btn-success">
+              <i class="fas fa-plus-circle me-1"></i>Subir nueva obra
+            </a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <%- include('./partials/footer') %>
+  
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Custom JS -->
+  <script src="/js/alerts.js"></script>
+  <script src="/js/main.js"></script>
+  
+  <script>
+    // Filtrado simple de obras
+    document.addEventListener('DOMContentLoaded', function() {
+      const filterButtons = document.querySelectorAll('[data-filter]');
+      
+      filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          // Activar el botón seleccionado
+          filterButtons.forEach(btn => btn.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Aquí se implementaría la lógica real de filtrado
+          // Por ahora es solo visual
+          const filter = this.getAttribute('data-filter');
+          console.log('Filtro seleccionado:', filter);
+          
+          // Mostrar notificación de que se aplicó el filtro
+          Alerts.info('Filtro aplicado: ' + filter);
+        });
+      });
+      
+      // Funcionalidad para compartir
+      const shareButtons = document.querySelectorAll('.share-btn');
+      
+      shareButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const token = this.getAttribute('data-token');
+          const title = this.getAttribute('data-title');
+          const shareUrl = `${window.location.origin}/v/${token}/ar`;
+          
+          // Si la API de Web Share está disponible (móviles principalmente)
+          if (navigator.share) {
+            navigator.share({
+              title: `Arte Digital AR: ${title}`,
+              text: 'Mira esta obra en realidad aumentada',
+              url: shareUrl
+            })
+            .then(() => console.log('Contenido compartido exitosamente'))
+            .catch((error) => console.log('Error al compartir', error));
+          } else {
+            // Fallback para navegadores que no soportan Web Share API
+            navigator.clipboard.writeText(shareUrl)
+              .then(() => {
+                Alerts.success('Enlace copiado al portapapeles');
+              })
+              .catch(err => {
+                console.error('Error al copiar: ', err);
+                Alerts.error('No se pudo copiar el enlace');
+              });
+          }
+        });
+      });
+    });
+  </script>
+
+  <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
+  <script>
+    Alerts.success('<%= success_msg %>');
+  </script>
+  <% } %>
+
+  <% if (typeof error_msg !== 'undefined' && error_msg && error_msg.length > 0) { %>
+  <script>
+    Alerts.error('<%= error_msg %>');
+  </script>
+  <% } %>
+
+  <% if (typeof error !== 'undefined' && error && error.length > 0) { %>
+  <script>
+    Alerts.error('<%= error %>');
+  </script>
+  <% } %>
+</body>
+</html> 

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+  
+  <div class="container mt-4">
+    <%- include('../partials/messages') %>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1><%= work.title_work || 'Sin título' %></h1>
+      <div>
+        <a href="/works" class="btn btn-outline-secondary me-2">
+          <i class="fas fa-arrow-left me-1"></i> Volver
+        </a>
+        
+        <% if (work.status_work === 'activa' || work.status_work === 'inactiva') { %>
+          <a href="/works/<%= work.id_work %>/edit" class="btn btn-primary">
+            <i class="fas fa-edit me-1"></i> Editar
+          </a>
+        <% } %>
+      </div>
+    </div>
+    
+    <div class="card mb-4">
+      <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" id="workTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">
+              <i class="fas fa-info-circle me-1"></i> Información
+            </button>
+          </li>
+          <% if (work.status_work === 'activa') { %>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="share-tab" data-bs-toggle="tab" data-bs-target="#share" type="button" role="tab" aria-controls="share" aria-selected="false">
+                <i class="fas fa-share-alt me-1"></i> Compartir
+              </button>
+            </li>
+          <% } %>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="status-tab" data-bs-toggle="tab" data-bs-target="#status" type="button" role="tab" aria-controls="status" aria-selected="false">
+              <i class="fas fa-tasks me-1"></i> Estado
+            </button>
+          </li>
+        </ul>
+      </div>
+      <div class="card-body">
+        <div class="tab-content" id="workTabsContent">
+          <!-- Pestaña de Información -->
+          <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+            <div class="row">
+              <div class="col-md-6">
+                <% if (mainImage && mainImage.url_image_work) { %>
+                  <div class="position-relative mb-3">
+                    <% if (mainImage.content_type === 'video') { %>
+                      <video src="<%= mainImage.url_image_work %>" controls class="img-fluid work-detail-image"></video>
+                    <% } else { %>
+                      <img src="<%= mainImage.url_image_work %>" alt="<%= work.title_work || 'Obra de arte' %>" class="img-fluid work-detail-image">
+                    <% } %>
+                    <button type="button" class="btn btn-sm btn-danger position-absolute" style="top: 10px; right: 10px;"
+                      onclick="eliminarImagen('<%= mainImage.url_image_work %>', '<%= work.id_work %>', 'main')">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                <% } else { %>
+                  <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Imagen no disponible 
+                  </div>
+                <% } %>
+                
+                <% if (additionalImages && additionalImages.length > 0) { %>
+                  <h5 class="mt-4 mb-3">Imágenes adicionales</h5>
+                  <div class="row g-2">
+                    <% additionalImages.forEach(img => { %>
+                      <div class="col-4">
+                        <div class="position-relative">
+                          <img src="<%= img.image_url %>" alt="Imagen adicional" class="img-thumbnail">
+                          <button type="button" class="btn btn-sm btn-danger position-absolute" style="top: 5px; right: 5px;"
+                            onclick="eliminarImagen('<%= img.image_url %>', '<%= img.id_additional_image %>', 'additional')">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    <% }) %>
+                  </div>
+                <% } %>
+              </div>
+              <div class="col-md-6">
+                <h4>Detalles</h4>
+                <p><%= work.description_work || 'Sin descripción' %></p>
+                
+                <div class="badge bg-<%= work.status_work === 'activa' ? 'success' : 'danger' %> mb-3">
+                  <%= work.status_work %>
+                </div>
+                
+                <div class="mb-4">
+                  <h5 class="mt-4 mb-3">Fecha de creación</h5>
+                  <p><%= new Date(work.created_at_work).toLocaleString() %></p>
+                </div>
+                
+                <% if (videos && videos.length > 0) { %>
+                  <h5 class="mt-4 mb-3">Videos</h5>
+                  <div class="list-group mb-4">
+                    <% videos.forEach(video => { %>
+                      <a href="<%= video.video_url %>" target="_blank" class="list-group-item list-group-item-action">
+                        <i class="fas fa-video me-2"></i> <%= video.video_url.length > 40 ? video.video_url.substring(0, 40) + '...' : video.video_url %>
+                      </a>
+                    <% }) %>
+                  </div>
+                <% } %>
+                
+                <% if (links && links.length > 0) { %>
+                  <h5 class="mt-4 mb-3">Enlaces</h5>
+                  <div class="list-group mb-4">
+                    <% links.forEach(link => { %>
+                      <a href="<%= link.link_url %>" target="_blank" class="list-group-item list-group-item-action">
+                        <i class="fas fa-link me-2"></i> <%= link.link_url.length > 40 ? link.link_url.substring(0, 40) + '...' : link.link_url %>
+                      </a>
+                    <% }) %>
+                  </div>
+                <% } %>
+                
+                <% if (socialMedia && socialMedia.length > 0) { %>
+                  <h5 class="mt-4 mb-3">Redes sociales</h5>
+                  <div class="list-group mb-4">
+                    <% socialMedia.forEach(social => { %>
+                      <a href="<%= social.handle_or_url %>" target="_blank" class="list-group-item list-group-item-action">
+                        <i class="fab fa-<%= social.platform.toLowerCase() %> me-2"></i> <%= social.platform %>: <%= social.handle_or_url %>
+                      </a>
+                    <% }) %>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Pestaña de Compartir -->
+          <% if (work.status_work === 'activa') { %>
+            <div class="tab-pane fade" id="share" role="tabpanel" aria-labelledby="share-tab">
+              <div class="row">
+                <div class="col-md-8 offset-md-2 text-center">
+                  <h4 class="mb-4">Compartir Obra</h4>
+                  
+                  <% if (work.url_image_work && work.url_target_work) { %>
+                    <p class="mb-4">
+                      Escanea este código QR para compartir la experiencia en <strong>Realidad Aumentada</strong> de esta obra:
+                    </p>
+                    
+                    <div class="d-flex justify-content-center mb-4">
+                      <div class="p-3 border rounded shadow-sm position-relative">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=<%= encodeURIComponent(`${protocol}://${baseUrl}/v/${work.share_token}/ar`) %>" 
+                             alt="Código QR para experiencia AR" 
+                             class="img-fluid">
+                      </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-center gap-3 mb-4">
+                      <button type="button" class="btn btn-primary" onclick="copyShareLink()">
+                        <i class="fas fa-copy me-2"></i> Copiar enlace
+                      </button>
+                      
+                      <a href="<%= `${protocol}://${baseUrl}/v/${work.share_token}/ar` %>" class="btn btn-success" target="_blank">
+                        <i class="fas fa-vr-cardboard me-2"></i> Ver en AR
+                      </a>
+
+                      <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                          <i class="fas fa-share-alt me-2"></i> Compartir en redes
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li>
+                            <a class="dropdown-item" href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent(`${protocol}://${baseUrl}/v/${work.share_token}/ar`) %>" target="_blank">
+                              <i class="fab fa-facebook me-2"></i> Facebook
+                            </a>
+                          </li>
+                          <li>
+                            <a class="dropdown-item" href="https://twitter.com/intent/tweet?url=<%= encodeURIComponent(`${protocol}://${baseUrl}/v/${work.share_token}/ar`) %>&text=<%= encodeURIComponent('Mira esta obra de arte en Realidad Aumentada: ' + work.title_work) %>" target="_blank">
+                              <i class="fab fa-twitter me-2"></i> Twitter
+                            </a>
+                          </li>
+                          <li>
+                            <a class="dropdown-item" href="https://wa.me/?text=<%= encodeURIComponent('Mira esta obra de arte en Realidad Aumentada: ' + work.title_work + ' - ' + `${protocol}://${baseUrl}/v/${work.share_token}/ar`) %>" target="_blank">
+                              <i class="fab fa-whatsapp me-2"></i> WhatsApp
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  <% } else { %>
+                    <div class="alert alert-warning">
+                      <i class="fas fa-exclamation-triangle me-2"></i> 
+                      <% if (!work.url_image_work && !work.url_target_work) { %>
+                        No se puede compartir esta obra porque falta el contenido principal y el archivo target.
+                      <% } else if (!work.url_image_work) { %>
+                        No se puede compartir esta obra porque falta el contenido principal.
+                      <% } else if (!work.url_target_work) { %>
+                        No se puede compartir esta obra porque falta el archivo target.
+                      <% } %>
+                      <p class="mt-3">
+                        <a href="/works/<%= work.id_work %>/edit" class="btn btn-primary">
+                          <i class="fas fa-edit me-1"></i> Editar Obra
+                        </a>
+                      </p>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          <% } %>
+          
+          <!-- Pestaña de Estado -->
+          <div class="tab-pane fade" id="status" role="tabpanel" aria-labelledby="status-tab">
+            <div class="row">
+              <div class="col-md-8 offset-md-2">
+                <h4 class="mb-4">Estado actual de la obra</h4>
+                
+                <div class="card mb-4">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      <% if (work.status_work === 'activa') { %>
+                        <span class="text-success"><i class="fas fa-check-circle me-2"></i> Activa</span>
+                      <% } else if (work.status_work === 'inactiva') { %>
+                        <span class="text-danger"><i class="fas fa-times-circle me-2"></i> Inactiva</span>
+                      <% } %>
+                    </h5>
+                    
+                    <p class="card-text">
+                      <% if (work.status_work === 'activa') { %>
+                        La obra está activa y visible públicamente.
+                      <% } else if (work.status_work === 'inactiva') { %>
+                        La obra está inactiva y no está visible públicamente.
+                      <% } %>
+                    </p>
+                  </div>
+                </div>
+                
+                <% if (work.status_work === 'activa' || work.status_work === 'inactiva') { %>
+                  <form action="/works/<%= work.id_work %>/status" method="POST" class="mt-4">
+                    <% if (work.status_work === 'activa') { %>
+                      <input type="hidden" name="status" value="inactiva">
+                      <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times-circle me-2"></i> Desactivar obra
+                      </button>
+                    <% } else { %>
+                      <input type="hidden" name="status" value="activa">
+                      <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check-circle me-2"></i> Activar obra
+                      </button>
+                    <% } %>
+                  </form>
+                  
+                  <div class="mt-4">
+                    <h5 class="text-danger">Zona de peligro</h5>
+                    <p>La eliminación de una obra es permanente y no se puede deshacer.</p>
+                    <form action="/works/<%= work.id_work %>/delete" method="POST" class="mt-3" onsubmit="return confirm('¿Estás seguro de querer eliminar esta obra? Esta acción eliminará todas las imágenes, recursos y datos asociados, y no se puede deshacer.')">
+                      <button type="submit" class="btn btn-outline-danger">
+                        <i class="fas fa-trash me-2"></i> Eliminar obra permanentemente
+                      </button>
+                    </form>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <%- include('../partials/footer') %>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Función para eliminar imágenes individualmente
+      window.eliminarImagen = async function(ruta, idImagen, tipo) {
+        if (confirm('¿Estás seguro de querer eliminar esta imagen? Esta acción no se puede deshacer.')) {
+          try {
+            const response = await fetch('/works/image/delete', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                ruta: ruta,
+                id_imagen: idImagen,
+                tipo: tipo
+              })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+              alert('Imagen eliminada exitosamente');
+              window.location.reload();
+            } else {
+              alert('Error al eliminar la imagen: ' + data.message);
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            alert('Error de conexión al intentar eliminar la imagen');
+          }
+        }
+      };
+
+      // Función para copiar el enlace al portapapeles
+      window.copyShareLink = function() {
+        const shareUrl = '<%= `${protocol}://${baseUrl}/v/${work.share_token}/ar` %>';
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          const alertDiv = document.createElement('div');
+          alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+          alertDiv.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i> Enlace de experiencia AR copiado al portapapeles
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          `;
+          document.body.appendChild(alertDiv);
+          
+          setTimeout(() => {
+            alertDiv.remove();
+          }, 3000);
+        }).catch(err => {
+          console.error('Error al copiar el enlace:', err);
+          alert('Error al copiar el enlace');
+        });
+      };
+    });
+  </script>
+</body>
+</html> 

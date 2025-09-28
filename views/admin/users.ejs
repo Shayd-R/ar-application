@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+  
+  <div class="container mt-4">
+    <%- include('../partials/messages') %>
+    
+    <div class="row">
+      <div class="col-md-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <h1><i class="fas fa-users me-2"></i>Gestión de Usuarios</h1>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">
+            <i class="fas fa-user-plus me-2"></i>Crear Usuario
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-dark">
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Fecha de Registro</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (users && users.length > 0) { %>
+                <% users.forEach(user => { %>
+                  <tr>
+                    <td><%= user.id_user %></td>
+                    <td><%= user.name_user %></td>
+                    <td><%= user.email_user %></td>
+                    <td>
+                      <% if (user.id_role_user === 1) { %>
+                        <span class="badge bg-danger">Administrador</span>
+                      <% } else { %>
+                        <span class="badge bg-primary">Usuario</span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <% if (user.token_user) { %>
+                        <span class="badge bg-warning text-dark">Recuperación</span>
+                      <% } else if (user.active_user === 0) { %>
+                        <span class="badge bg-danger">Inactivo</span>
+                      <% } else { %>
+                        <span class="badge bg-success">Activo</span>
+                      <% } %>
+                    </td>
+                    <td><%= new Date(user.created_at_user).toLocaleDateString('es-ES') %></td>
+                    <td>
+                      <div class="btn-group">
+                        <a href="/admin/users/<%= user.id_user %>/edit" class="btn btn-primary btn-sm" title="Editar">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" class="btn btn-danger btn-sm ms-1" title="Eliminar" 
+                          data-bs-toggle="modal" data-bs-target="#deleteUserModal" 
+                          data-user-id="<%= user.id_user %>"
+                          data-user-name="<%= user.name_user %>">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="7" class="text-center">No hay usuarios registrados</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal para crear usuario -->
+  <div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="createUserModalLabel"><i class="fas fa-user-plus me-2"></i>Crear Nuevo Usuario</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form action="/admin/users/create" method="POST">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="name" class="form-label">Nombre</label>
+              <input type="text" id="name" name="name" class="form-control" placeholder="Ingresa el nombre" required>
+            </div>
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" id="email" name="email" class="form-control" placeholder="Ingresa el email" required>
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Contraseña</label>
+              <input type="password" id="password" name="password" class="form-control" placeholder="Mínimo 6 caracteres" required>
+              <div class="form-text">La contraseña debe tener al menos 6 caracteres</div>
+            </div>
+            <div class="mb-3">
+              <label for="role" class="form-label">Rol</label>
+              <select id="role" name="role" class="form-select" required>
+                <option value="2">Usuario</option>
+                <option value="1">Administrador</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Crear Usuario</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal de confirmación de eliminación (fuera del bucle) -->
+  <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">
+            <i class="fas fa-exclamation-triangle me-2"></i>Eliminar Usuario
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de que deseas eliminar al usuario <strong id="userName"></strong>?</p>
+          <div class="alert alert-warning">
+            <i class="fas fa-info-circle me-2"></i>Esta acción podría afectar a sus obras publicadas.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <a href="#" id="deleteUserLink" class="btn btn-danger">
+            <i class="fas fa-trash me-2"></i>Verificar Eliminación
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <%- include('../partials/footer') %>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    // Script para manejar el modal de eliminación
+    document.addEventListener('DOMContentLoaded', function() {
+      const deleteModal = document.getElementById('deleteUserModal');
+      if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function(event) {
+          // Botón que activó el modal
+          const button = event.relatedTarget;
+          
+          // Extraer información de los atributos data-*
+          const userId = button.getAttribute('data-user-id');
+          const userName = button.getAttribute('data-user-name');
+          
+          // Actualizar el contenido del modal
+          document.getElementById('userName').textContent = userName;
+          document.getElementById('deleteUserLink').href = `/admin/users/${userId}/delete`;
+        });
+      }
+    });
+  </script>
+</body>
+</html> 
