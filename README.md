@@ -15,8 +15,10 @@ Este proyecto es una aplicación web que permite gestionar obras artísticas uti
 ## 📋 Requisitos Previos
 
 - Node.js (v14 o superior)
-- MySQL/MariaDB
-- Docker y Docker Compose (para instalación con Docker)
+- MySQL/MariaDB instalado localmente (para desarrollo local)
+  - Puede usar XAMPP, WAMP, MAMP o una instalación independiente de MySQL
+  - Opcional: Un gestor de base de datos como phpMyAdmin, MySQL Workbench, etc.
+- Docker y Docker Compose (solo si vas a usar contenedores)
 - Navegador web moderno con soporte para WebGL y WebRTC
 - Para pruebas locales de AR: dispositivo móvil con cámara
 
@@ -59,10 +61,24 @@ Este proyecto es una aplicación web que permite gestionar obras artísticas uti
    - Para desarrollo local, usa `DB_HOST=localhost`
    - Para Docker, usa `DB_HOST=shared_mysql_db`
 
-4. Importa la base de datos:
+4. Configura la base de datos:
+
+   Tienes dos opciones para importar la base de datos:
+
+   **Opción A: Usando la terminal**
    ```bash
    mysql -u root -p < database/ar.sql
    ```
+
+   **Opción B: Usando un gestor de MySQL**
+   - Abre tu gestor de base de datos preferido (phpMyAdmin, MySQL Workbench, etc.)
+   - Crea una base de datos llamada `ar`
+   - Importa el archivo `database/ar.sql` que está en la carpeta del proyecto
+   - El script creará todas las tablas necesarias e insertará los datos iniciales
+
+   ⚠️ **Importante**: 
+   - La base de datos debe llamarse `ar`
+   - Asegúrate de que las credenciales en tu archivo `.env` coincidan con las de tu servidor MySQL local
 
 5. Inicia la aplicación:
    ```bash
@@ -79,28 +95,82 @@ Este proyecto es una aplicación web que permite gestionar obras artísticas uti
 
 ## 🐳 Instalación con Docker
 
-1. Asegúrate de tener Docker y Docker Compose instalados
+El proyecto utiliza dos archivos `docker-compose.yml` separados para una mejor organización:
+- Uno en la raíz para la aplicación Node.js
+- Otro en la carpeta `database/` para la base de datos y phpMyAdmin
+
+### 1️⃣ Primero: Configurar la Base de Datos
+
+1. Navega al directorio de la base de datos:
+   ```bash
+   cd database
+   ```
+
+2. Levanta los contenedores de MySQL y phpMyAdmin:
+   ```bash
+   docker-compose up -d
+   ```
+
+   Esto iniciará:
+   - MySQL en el puerto 3306
+   - phpMyAdmin en http://localhost:8080
+   - Importará automáticamente el archivo `ar.sql`
+
+### 2️⃣ Segundo: Configurar la Aplicación
+
+1. Vuelve al directorio raíz:
+   ```bash
+   cd ..
+   ```
 
 2. Copia el archivo de variables de entorno:
    ```bash
    cp .env.example .env
    ```
 
-3. Configura las variables en el archivo `.env` (especialmente las relacionadas con la base de datos)
+3. En el archivo `.env`, asegúrate de que:
+   ```env
+   DB_HOST=shared_mysql_db
+   DB_USER=root
+   DB_PASS=
+   DB_NAME=ar
+   ```
 
-4. Construye y levanta los contenedores:
+4. Construye y levanta la aplicación:
    ```bash
    docker-compose up -d --build
    ```
 
-5. Importa la base de datos (desde otro terminal):
-   ```bash
-   docker exec -i ar-app mysql -u root ar < database/ar.sql
-   ```
+### ✅ Verificación
 
-La aplicación estará disponible en `http://localhost:3000`
+- Aplicación web: http://localhost:3000
+- phpMyAdmin: http://localhost:8080
+  - Usuario: root
+  - Contraseña: (dejar vacío)
 
-⚠️ **Nota**: Si es la primera vez que ejecutas el proyecto, asegúrate de que los directorios de uploads se creen correctamente dentro del contenedor.
+### 📁 Estructura Docker
+
+```
+ar-application/
+├── docker-compose.yml          # Configuración de la aplicación Node.js
+├── Dockerfile                  # Construcción de la imagen de la aplicación
+└── database/
+    └── docker-compose.yml      # Configuración de MySQL y phpMyAdmin
+```
+
+### ⚠️ Notas Importantes
+
+1. Orden de inicio:
+   - Primero inicia los contenedores de la base de datos
+   - Después inicia el contenedor de la aplicación
+
+2. Redes Docker:
+   - Los contenedores se comunican a través de una red compartida
+   - El nombre del host de MySQL es `shared_mysql_db`
+
+3. Persistencia:
+   - Los datos de MySQL se mantienen en un volumen Docker
+   - Los archivos subidos se mantienen en el volumen de la aplicación
 
 ## 📱 Pruebas de AR en Desarrollo Local
 
